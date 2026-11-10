@@ -1,0 +1,211 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Play, X, Volume2, VolumeX, ShieldCheck, Zap, Globe, Sparkles } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+
+export default function VideoTrailer({ isOpen, onClose }) {
+  const [step, setStep] = useState(0);
+  const [muted, setMuted] = useState(false);
+  const audioCtxRef = useRef(null);
+
+  // Synthesizes institutional sci-fi sound effects using browser Web Audio API
+  const playSound = (type) => {
+    if (muted) return;
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!audioCtxRef.current) audioCtxRef.current = new AudioCtx();
+      const ctx = audioCtxRef.current;
+      if (ctx.state === 'suspended') ctx.resume();
+
+      if (type === 'bass') {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(110, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(30, ctx.currentTime + 1.2);
+        gain.gain.setValueAtTime(0.8, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 1.2);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 1.2);
+      } else if (type === 'tick') {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(800, ctx.currentTime);
+        gain.gain.setValueAtTime(0.2, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.05);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.05);
+      }
+    } catch {}
+  };
+
+  useEffect(() => {
+    if (!isOpen) {
+      setStep(0);
+      return;
+    }
+
+    const timeline = [
+      { t: 500, fn: () => { setStep(1); playSound('tick'); } },
+      { t: 3000, fn: () => { setStep(2); playSound('bass'); } },
+      { t: 6500, fn: () => { setStep(3); playSound('bass'); } },
+      { t: 10500, fn: () => { setStep(4); playSound('bass'); } },
+    ];
+
+    const timers = timeline.map(item => setTimeout(item.fn, item.t));
+    return () => timers.forEach(clearTimeout);
+  }, [isOpen]);
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4 font-mono select-none">
+      {/* Top Controls */}
+      <div className="absolute top-6 right-6 flex items-center gap-3 z-50">
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => setMuted(!muted)}
+          className="border-slate-800 bg-slate-900/80 text-slate-300 hover:text-white rounded-full w-9 h-9"
+        >
+          {muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+        </Button>
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={onClose}
+          className="border-slate-800 bg-slate-900/80 text-slate-300 hover:text-white rounded-full w-9 h-9"
+        >
+          <X className="w-4 h-4" />
+        </Button>
+      </div>
+
+      {/* Cinematic Viewport (16:9 Letterboxed) */}
+      <div className="w-full max-w-5xl aspect-[16/9] bg-[#070A0F] border border-slate-800 rounded-2xl overflow-hidden relative flex flex-col justify-between shadow-[0_0_80px_rgba(37,99,235,0.15)]">
+        {/* Film Grain & Scanlines */}
+        <div className="absolute inset-0 bg-[radial-gradient(#2563eb_1px,transparent_1px)] [background-size:20px_20px] opacity-10 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/60 pointer-events-none" />
+
+        {/* Dynamic Scene Engine */}
+        <div className="my-auto text-center px-6 relative z-10">
+          <AnimatePresence mode="wait">
+            {step === 1 && (
+              <motion.div
+                key="scene1"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, filter: 'blur(10px)' }}
+                transition={{ duration: 0.5 }}
+                className="space-y-4"
+              >
+                <div className="text-red-500 font-mono text-xs tracking-[0.4em] uppercase font-bold">
+                  LIQUIDITY FRAGMENTATION // SPREAD SLIPPAGE
+                </div>
+                <h2 className="text-3xl md:text-5xl font-extrabold text-white tracking-tight font-sans max-w-3xl mx-auto">
+                  When you move eight figures across borders...
+                </h2>
+                <p className="text-sm md:text-base text-slate-400 font-mono">
+                  Seconds aren't time. They're capital.
+                </p>
+              </motion.div>
+            )}
+
+            {step === 2 && (
+              <motion.div
+                key="scene2"
+                initial={{ opacity: 0, scale: 1.1 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, filter: 'blur(10px)' }}
+                transition={{ duration: 0.4 }}
+                className="space-y-4"
+              >
+                <div className="w-16 h-16 rounded-2xl bg-blue-600/10 border border-blue-500/30 flex items-center justify-center mx-auto mb-2 text-blue-400">
+                  <Globe className="w-8 h-8 animate-pulse" />
+                </div>
+                <div className="text-blue-400 font-mono text-xs tracking-[0.4em] uppercase font-bold">
+                  JOHANNESBURG ⇄ DUBAI ⇄ LONDON
+                </div>
+                <h2 className="text-3xl md:text-5xl font-extrabold text-white tracking-tight font-sans">
+                  Sovereign Cross-Border Liquidity
+                </h2>
+                <p className="text-sm md:text-base text-slate-400 font-mono max-w-xl mx-auto">
+                  Zero retail order books. Zero hawala latency. Bilateral Delivery versus Payment.
+                </p>
+              </motion.div>
+            )}
+
+            {step === 3 && (
+              <motion.div
+                key="scene3"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.4 }}
+                className="space-y-4"
+              >
+                <div className="inline-flex gap-2 text-emerald-400 text-xs font-mono bg-emerald-950/60 border border-emerald-800 px-3 py-1 rounded-full uppercase tracking-wider">
+                  <ShieldCheck className="w-4 h-4" /> SARS CARF & SARB FINSURV READY
+                </div>
+                <h2 className="text-3xl md:text-5xl font-extrabold text-white tracking-tight font-sans">
+                  Compliance Built Directly at the Ticket Level
+                </h2>
+                <p className="text-sm md:text-base text-slate-400 font-mono max-w-lg mx-auto">
+                  Deterministic audit logs, FICA Tier-3 verification, and automated foreign allowance tracking.
+                </p>
+              </motion.div>
+            )}
+
+            {step === 4 && (
+              <motion.div
+                key="scene4"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.6 }}
+                className="space-y-6"
+              >
+                <div className="w-20 h-20 rounded-3xl bg-blue-600/20 border-2 border-blue-500 flex items-center justify-center mx-auto shadow-[0_0_50px_rgba(37,99,235,0.4)]">
+                  <Zap className="w-10 h-10 text-blue-400" />
+                </div>
+                <div>
+                  <h1 className="text-4xl md:text-6xl font-extrabold text-white tracking-tight font-sans">
+                    VAEL <span className="text-blue-500">TERMINAL</span>
+                  </h1>
+                  <p className="text-xs md:text-sm text-slate-400 tracking-[0.3em] font-mono mt-2 uppercase">
+                    Institutional Digital Asset Operations
+                  </p>
+                </div>
+                <div className="pt-2">
+                  <Button
+                    onClick={onClose}
+                    className="bg-blue-600 hover:bg-blue-500 text-white font-mono text-xs px-8 py-5 rounded-lg shadow-lg"
+                  >
+                    ENTER LIVE DESK →
+                  </Button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* Bottom Film Strip Indicator */}
+        <div className="border-t border-slate-800/80 p-4 flex items-center justify-between text-[10px] text-slate-500 font-mono">
+          <span>VAEL TERMINAL // 4K TEASER</span>
+          <div className="flex gap-1.5">
+            {[1, 2, 3, 4].map(s => (
+              <div
+                key={s}
+                className={`h-1 rounded-full transition-all duration-300 ${step === s ? 'w-6 bg-blue-500' : 'w-2 bg-slate-800'}`}
+              />
+            ))}
+          </div>
+          <span>terminal.vaelotc.com</span>
+        </div>
+      </div>
+    </div>
+  );
+}
